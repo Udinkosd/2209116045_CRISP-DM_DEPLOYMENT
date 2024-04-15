@@ -6,41 +6,74 @@ import altair as alt
 import matplotlib.ticker as mtick
 import streamlit as st
 import pandas as pd
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import LabelEncoder
 import matplotlib.pyplot as plt
 
 
 df = pd.read_csv('Data Cleaned.csv')
 
 def display_introduction():
-    st.subheader("Introduction")
+    st.subheader("Pengenalan")
     st.markdown("""
-    This dataset contains information about the salaries of employees at a company. 
-    Each row represents a different employee, and the columns include information such as age, gender, education level, job title, years of experience, and salary.
+    Dataset ini berisi informasi tentang gaji karyawan di sebuah perusahaan. 
+    Setiap baris mewakili seorang karyawan yang berbeda, dan kolom-kolomnya mencakup informasi 
+    seperti usia, jenis kelamin, tingkat pendidikan, jabatan, tahun pengalaman, dan gaji.
 
-    **Columns:**
+    **Kolom:**
 
-    - **Age:** This column represents the age of each employee in years. The values in this column are numeric.
+    - Usia: Kolom ini menunjukkan usia setiap karyawan dalam tahun. Nilai-nilai dalam kolom ini bersifat numerik.
 
-    - **Gender:** This column contains the gender of each employee, which can be either male or female. The values in this column are categorical.
+    - Jenis Kelamin: Kolom ini berisi jenis kelamin setiap karyawan, yang dapat berupa laki-laki atau perempuan. 
+    Nilai-nilai dalam kolom ini bersifat kategorikal.
 
-    - **Education Level:** This column contains the educational level of each employee, which can be high school, bachelor's degree, master's degree, or PhD. The values in this column are categorical.
+    - Tingkat Pendidikan: Kolom ini berisi tingkat pendidikan setiap karyawan, yang dapat berupa 
+    sekolah menengah, gelar sarjana, gelar magister, atau gelar doktor. Nilai-nilai dalam kolom ini 
+    bersifat kategorikal.
 
-    - **Job Title:** This column contains the job title of each employee. The job titles can vary depending on the company and may include positions such as manager, analyst, engineer, or administrator. The values in this column are categorical.
+    - Jabatan: Kolom ini berisi jabatan setiap karyawan. Jabatan-jabatan dapat bervariasi 
+    tergantung pada perusahaan dan dapat mencakup posisi seperti manajer, analis, insinyur, 
+    atau administrator. Nilai-nilai dalam kolom ini bersifat kategorikal.
 
-    - **Years of Experience:** This column represents the number of years of work experience of each employee. The values in this column are numeric.
+    - Pengalaman Kerja: Kolom ini mewakili jumlah tahun pengalaman kerja setiap karyawan. 
+    Nilai-nilai dalam kolom ini bersifat numerik.
 
-    - **Salary:** This column represents the annual salary of each employee in US dollars. The values in this column are numeric and can vary depending on factors such as job title, years of experience, and education level.
+    - Gaji: Kolom ini mewakili gaji tahunan setiap karyawan dalam dolar AS. Nilai-nilai 
+    dalam kolom ini bersifat numerik dan dapat bervariasi tergantung pada faktor seperti 
+    jabatan, tahun pengalaman, dan tingkat pendidikan.
     """)
 
 def display_data_section():
     st.subheader("Dataset")
-    st.write("""
-    This is the data section.
-    You can provide options to interact with your data here.
-    """)
     st.dataframe(df)
+    st.markdown("""
+    Berikut adalah rangkuman dari dataset:
+
+    Jumlah responden berdasarkan tingkat pendidikan dan jenis kelamin:
+    | Gender | Tingkat Pendidikan | Jumlah |
+    |--------|--------------------|--------|
+    | Female | Sarjana            | 103    |
+    |        | Magister           | 50     |
+    |        | Doktor             | 26     |
+    | Male   | Sarjana            | 121    |
+    |        | Magister           | 48     |
+    |        | Doktor             | 25     |
+    ---------------------------------------
+    - Usia Tertua: 53
+    - Usia Termuda: 23
+    - Usia Rata-rata: 37
+    ---------------------------------------
+    - Gaji Tertinggi: $250,000
+    - Gaji Terendah: $350
+    - Gaji Rata-rata: $100,577
+    ---------------------------------------
+    - Pengalaman Kerja Tertinggi: 25 tahun
+    - Pengalaman Kerja Terendah: 0 tahun
+    - Rata-rata Pengalaman Kerja: 10.03 tahun
+    """)
 
 def display_gender_distribution():
+    st.subheader("Distribusi Jenis Kelamin")
     st.write("Choose colors for bars:")
     col1, col2 = st.columns([1, 9])
     with col1:
@@ -48,37 +81,43 @@ def display_gender_distribution():
     with col2:
         female_color = st.color_picker("Female bars", "#ff7f0e")
 
-    st.subheader("Gender Distribution")
     gender_counts = df['Gender'].value_counts()
     colors = [male_color, female_color]
     explode = (0.1, 0)
     fig, ax = plt.subplots(figsize=(8, 8))
-    fig.patch.set_facecolor('none') # Set the facecolor of the plot to 'none'
+    fig.patch.set_facecolor('none') 
     gender_counts.plot(kind='pie', autopct='%1.1f%%', startangle=140, colors=colors, explode=explode, ax=ax)
-    ax.set_title('Perbandingan Jumlah Laki-laki dan Perempuan', color='white') # Change the title color to white
-    ax.tick_params(axis='both', labelcolor='white') # Change the tick label color to white
+    ax.set_title('Perbandingan Jumlah Laki-laki dan Perempuan', color='white')
+    ax.tick_params(axis='both', labelcolor='white')
     st.pyplot(fig, bbox_inches='tight', pad_inches=0)
+    st.markdown("""
+    Pie Chart
 
-    st.write("""
-    This is the data section.
-    You can provide options to interact with your data here.
+    Dalam diagram tersebut, menunjukkan jumlah responden dalam dataset, 
+    terdapat 48% wanita dan sisanya yaitu 52% adalah pria.
+
+    ---------------------------------------
     """)
 
 def filter_data_by_age(df, age):
     return df[df['Age'] == age]
-
+        
 def age_slider():
-    st.title('Education Level Distribution by Gender and Age')
-
+    st.subheader("Distribusi Pendidikan berdasarkan Jenis Kelamin dan Umur")
     age = st.slider('Select Age', min_value=23, max_value=53, value=30)
     filtered_data = filter_data_by_age(df, age)
     display_education_by_gender(filtered_data, age)
 
 def display_education_by_gender(filtered_df=None, age=None):
-    st.subheader("Education Level Distribution by Gender and Age")
     if filtered_df is None or age is None:
         return
     else:
+        st.write("Choose colors for bars:")
+        col1, col2 = st.columns([1, 9])
+        with col1:
+            male_color = st.color_picker("Male bars", "#1f77b2")
+        with col2:
+            female_color = st.color_picker("Female bars", "#ff7f0c")
         male_counts = filtered_df[filtered_df['Gender'] == 'Male']['Education Level'].value_counts()
         female_counts = filtered_df[filtered_df['Gender'] == 'Female']['Education Level'].value_counts()
 
@@ -87,8 +126,8 @@ def display_education_by_gender(filtered_df=None, age=None):
 
         fig, ax = plt.subplots(figsize=(10, 6))
 
-        male_bars = ax.bar(np.arange(len(levels)), [male_counts.get(level, 0) for level in levels], bar_width, label='Male', color='yellow')
-        female_bars = ax.bar(np.arange(len(levels)) + bar_width, [female_counts.get(level, 0) for level in levels], bar_width, label='Female', color='red')
+        male_bars = ax.bar(np.arange(len(levels)), [male_counts.get(level, 0) for level in levels], bar_width, label='Male', color=male_color)
+        female_bars = ax.bar(np.arange(len(levels)) + bar_width, [female_counts.get(level, 0) for level in levels], bar_width, label='Female', color=female_color)
 
         ax.set_xlabel('Education Level')
         ax.set_ylabel('Count')
@@ -108,14 +147,12 @@ def display_education_by_gender(filtered_df=None, age=None):
         st.pyplot(fig)
 
 def display_age_education_distribution(df):
-    st.subheader("Education Level Distribution by Age")
-
     st.write("Choose colors for bars:")
     col1, col2 = st.columns([1, 9])
     with col1:
-        male_color = st.color_picker("Male bars", "#1f77b4")
+        male_color = st.color_picker("Male bars", "#1f77b3")
     with col2:
-        female_color = st.color_picker("Female bars", "#ff7f0e")
+        female_color = st.color_picker("Female bars", "#ff7f0a")
 
     education_counts = df.groupby(['Education Level', 'Gender']).size()
     education_counts = education_counts.reset_index(name='Count')
@@ -137,11 +174,34 @@ def display_age_education_distribution(df):
 
     st.altair_chart(chart, use_container_width=True)
 
+    st.markdown("""
+    | Gender | Tingkat Pendidikan | Jumlah |
+    |--------|--------------------|--------|
+    | Female | Sarjana            | 103    |
+    |        | Magister           | 50     |
+    |        | Doktor             | 26     |
+    | Male   | Sarjana            | 121    |
+    |        | Magister           | 48     |
+    |        | Doktor             | 25     |
+    """)
+    st.markdown("""
+    ---------------------------------------
+    Dalam diagram Bar tersebut, erlihat bahwa mayoritas responden 
+    memiliki gelar sarjana (Bachelor's), diikuti oleh gelar master (Master's) dan gelar doktor (PhD). 
+    Meskipun demikian, terdapat perbedaan kecil antara jumlah laki-laki dan 
+    perempuan dalam setiap tingkat pendidikan. Pada tingkat pendidikan sarjana, 
+    terdapat sedikit lebih banyak laki-laki daripada perempuan, sementara pada 
+    tingkat pendidikan master dan doktor, jumlah perempuan sedikit lebih banyak daripada laki-laki.
+    """)
+    st.markdown("""
+    ---------------------------------------
+    """)
+
 def display_age_x_salary():
     df_filtered = df.dropna(subset=['Age', 'Salary', 'Years of Experience'])
 
     # Scatter Plot
-    st.subheader('Scatter Plot: Hubungan Antara Usia dan Pendapatan')
+    st.subheader('Hubungan Antara Usia dan Pendapatan')
     min_salary = df_filtered['Salary'].min()
     max_salary = df_filtered['Salary'].max()
     min_age = df_filtered['Age'].min()
@@ -161,11 +221,23 @@ def display_age_x_salary():
     fig, ax = plt.subplots()
     ax.scatter(x, y, s=50, c='blue', alpha=0.5)
     ax.set_xlabel('Usia')
-    ax.set_ylabel('Pendapatan')
+    ax.set_ylabel('Pendapatan Per Tahun')
     st.pyplot(fig)
+    st.markdown("""
+        ---------------------------------------
+        Dalam scatter plot di atas, terlihat bahwa usia 23 tahun adalah yang paling muda, 
+        sementara usia 53 tahun adalah yang tertua. Di rentang usia 23 hingga 25 tahun, 
+        terdapat 5 responden dengan gaji di bawah 50 ribu USD per tahun. Salah satu dari responden 
+        berusia 25 tahun memiliki gaji paling rendah di rentang tersebut, yaitu sebesar 30 ribu USD. 
+        Di rentang usia di atas 50 tahun hingga 53 tahun, terdapat 9 responden. 
+        Gaji terendah adalah 140 ribu USD dan yang tertinggi adalah 250 ribu USD, 
+        dengan salah satu responden berusia 52 tahun.        
+        """)
+    st.markdown("""
+    ---------------------------------------
+    """)
 
-    # Bubble Chart
-    st.subheader('Bubble Chart: Hubungan Antara Tahun Pengalaman dan Pendapatan')
+    st.subheader('Hubungan Antara Tahun Pengalaman dan Pendapatan')
     min_experience = df_filtered['Years of Experience'].min()
     max_experience = df_filtered['Years of Experience'].max()
 
@@ -182,93 +254,254 @@ def display_age_x_salary():
     fig, ax = plt.subplots()
     ax.scatter(z, y_bubble, s=50, c='red', alpha=0.5)
     ax.set_xlabel('Tahun Pengalaman')
-    ax.set_ylabel('Pendapatan')
+    ax.set_ylabel('Pendapatan Per Tahun')
     ax.set_title('Ukuran gelembung: Tahun Pengalaman')
     st.pyplot(fig)
 
+    st.markdown("""
+        ---------------------------------------
+        Dalam bubble plot di atas, yang menggambarkan hubungan antara tahun pengalaman 
+        dan gaji per tahun, terlihat bahwa pengalaman terendah adalah 0 tahun dan yang tertinggi 
+        adalah 25 tahun. Di rentang 0 tahun hingga 5 tahun, terdapat 36 responden. 
+        Seorang responden dengan pengalaman 1 tahun memiliki gaji di bawah 20 ribu USD, 
+        sementara yang tertinggi adalah seorang responden dengan pengalaman 5 tahun yang 
+        memiliki gaji di atas 80 ribu USD per tahun.
+
+        - Gaji Tertinggi: $250,000
+        - Gaji Terendah: $350
+        - Gaji Rata-rata: $100,577
+        ---------------------------------------
+        - Pengalaman Kerja Tertinggi: 25 tahun
+        - Pengalaman Kerja Terendah: 0 tahun
+        - Rata-rata Pengalaman Kerja: 10.03 tahun 
+        """)
+    st.markdown("""
+    ---------------------------------------
+    """)
+
 def display_salary_by_gender(df):
-    # Filter data for male and female
-    male_data = df[df['Gender'] == 'Male']
-    female_data = df[df['Gender'] == 'Female']
+    st.subheader('Perbandingan Gaji berdasarkan Jenis Kelamin')
+    min_salary = df['Salary'].min()
+    max_salary = df['Salary'].max()
+    min_experience = df['Years of Experience'].min()
+    max_experience = df['Years of Experience'].max()
 
-    # Create a line chart
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(male_data['Years of Experience'], male_data['Salary'], label='Male', color='blue')
-    ax.plot(female_data['Years of Experience'], female_data['Salary'], label='Female', color='orange')
+    selected_salary = st.slider('Pilih Gaji:', min_salary, max_salary, (min_salary, max_salary))
+    selected_experience = st.slider('Pilih Tahun Pengalaman:', min_experience, max_experience, (min_experience, max_experience))
 
-    # Set chart title and labels
-    ax.set_title('Salary by Years of Experience and Gender')
+    filtered_data = df[
+        (df['Salary'] >= selected_salary[0]) & (df['Salary'] <= selected_salary[1]) &
+        (df['Years of Experience'] >= selected_experience[0]) & (df['Years of Experience'] <= selected_experience[1])
+    ]
+
+    avg_salary = filtered_data.groupby(['Gender', 'Years of Experience'])['Salary'].mean().unstack()
+
+    col1, col2 = st.columns([1, 9])
+    with col1:
+        male_color = st.color_picker("Male bars", "#1f77b4")
+    with col2:
+        female_color = st.color_picker("Female bars", "#ff7f0e")
+
+    fig, ax = plt.subplots(figsize=(12, 8))
+
+    male_data = avg_salary.loc['Male']
+    ax.plot(male_data.index, male_data, marker='o', label='Male', color=male_color)
+
+    female_data = avg_salary.loc['Female']
+    ax.plot(female_data.index, female_data, marker='o', label='Female', color=female_color)
+
+    ax.set_title('Average Salary by Gender and Years of Experience')
     ax.set_xlabel('Years of Experience')
-    ax.set_ylabel('Salary')
+    ax.set_ylabel('Average Salary ($)')
     ax.legend()
+    ax.grid(True)
+    ax.set_xticklabels(ax.get_xticks(), rotation=45)
+    ax.yaxis.set_major_formatter(mtick.StrMethodFormatter('${x:,.0f}'))
 
-    # Set limits for x and y axis
-    ax.set_xlim(0, 25)
-    ax.set_ylim(0, 250000)
-
-    # Display the chart
     st.pyplot(fig)
-
+    
+    st.markdown("""
+        ---------------------------------------
+        Pada data di atas, terlihat bahwa rata-rata gaji berdasarkan pengalaman kerja menunjukkan 
+        variasi yang signifikan. Gaji tertinggi mencapai USD250,000 pertahun, 
+        sementara yang terendah berada di bawah USD50,000 pertahun. Data ini menunjukkan bahwa 
+        semakin tinggi pengalaman kerja seseorang, semakin tinggi pula gaji yang diterima, baik 
+        untuk perempuan maupun laki-laki. Selain itu, tidak terdapat perbedaan gaji yang signifikan 
+        antara jenis kelamin dalam dataset ini. 
+        
+        Namun, perlu diperhatikan bahwa meskipun terlihat 
+        perbedaan gaji meski memiliki pengalaman yang sama, hal itu dipengaruhi oleh perbedaan posisi 
+        yang dipegang oleh responden di perusahaan masing-masing. Sebagai contoh, dalam data tersebut, 
+        terlihat bahwa laki-laki memiliki gaji lebih tinggi dibandingkan dengan perempuan. Perbedaan ini 
+        dipengaruhi oleh faktor seperti gelar lulusan dan posisi dalam perusahaan, di mana laki-laki 
+        mungkin menduduki posisi CEO sedangkan perempuan adalah Direktur.
+        """)
+    st.markdown("""
+    ---------------------------------------
+    """)
+    
 def display_education_level(df):
-    # Filter out rows with missing values
     df_filtered = df.dropna(subset=['Education Level'])
 
-    # Count the number of individuals for each education level
     education_counts = df_filtered['Education Level'].value_counts()
 
-    # Plotting
     plt.figure(figsize=(8, 8))
     plt.pie(education_counts, labels=education_counts.index, autopct='%1.1f%%', startangle=140)
     plt.title('Distribution of Education Levels')
-    plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+    plt.axis('equal')
     st.pyplot()
 
 def display_composition(df):
-    # Select the columns you're interested in
-    columns_of_interest = ['Gender', 'Education Level', 'Job Title']
+    st.subheader('Diagram Komposisi Dataset')
+    columns_of_interest = ['Gender', 'Education Level']
 
-    # Iterate over each column and plot a bar chart
     for column in columns_of_interest:
-        plt.figure(figsize=(10, 6))
-        plt.title(f'Composition of {column}')
-        plt.xlabel(column)
-        plt.ylabel('Count')
-        df[column].value_counts().plot(kind='bar')
-        st.pyplot()
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.set_title(f'Composition of {column}')
+        ax.set_xlabel(column)
+        ax.set_ylabel('Count')
+        df[column].value_counts().plot(kind='bar', ax=ax)
+        st.pyplot(fig)
+
+    st.dataframe(df)
+    st.markdown("""
+    ---------------------------------------
+    | Gender | Tingkat Pendidikan | Jumlah |
+    |--------|--------------------|--------|
+    | Female | Sarjana            | 103    |
+    |        | Magister           | 50     |
+    |        | Doktor             | 26     |
+    | Male   | Sarjana            | 121    |
+    |        | Magister           | 48     |
+    |        | Doktor             | 25     |
+    ---------------------------------------
+    - Usia Tertua: 53
+    - Usia Termuda: 23
+    - Usia Rata-rata: 37
+    ---------------------------------------
+    - Gaji Tertinggi: $250,000
+    - Gaji Terendah: $350
+    - Gaji Rata-rata: $100,577
+    ---------------------------------------
+    - Pengalaman Kerja Tertinggi: 25 tahun
+    - Pengalaman Kerja Terendah: 0 tahun
+    - Rata-rata Pengalaman Kerja: 10.03 tahun
+        """)
+    st.markdown("""
+    ---------------------------------------
+    """)
+
+def display_kmeans(df):
+    df.dropna(inplace=True)
+
+    label_encoder = LabelEncoder()
+    df['Gender'] = label_encoder.fit_transform(df['Gender'])
+    df['Education Level'] = label_encoder.fit_transform(df['Education Level'])
+    df['Job Title'] = label_encoder.fit_transform(df['Job Title'])
+
+    X = df[['Age', 'Gender', 'Education Level', 'Years of Experience', 'Salary']]
+
+    k = 3
+
+    kmeans = KMeans(n_clusters=k, init='k-means++', random_state=42)
+    df['Cluster'] = kmeans.fit_predict(X)
+
+    plt.figure(figsize=(10, 6))
+    plt.scatter(X.iloc[:, 0], X.iloc[:, 4], c=df['Cluster'], cmap='viridis')
+    plt.title('K-means Clustering')
+    plt.xlabel('Age')
+    plt.ylabel('Salary')
+    plt.colorbar(label='Cluster')
+    st.pyplot(plt)
+
+    st.markdown("""
+    ---------------------------------------
+    """)
+
+    st.subheader('Tabel Cluster')
+
+    selected_cluster = st.slider('Pilih Cluster:', 0, k-1, 0)
+
+    filtered_df = df[df['Cluster'] == selected_cluster]
+
+    st.write(filtered_df)
+    st.markdown("""
+    Dalam diagram k-means clustering tersebut, terdapat tiga cluster yaitu cluster 0, 1 dan 2.
+    """)
+    st.markdown("""
+    ---------------------------------------
+    """)
+
+    st.subheader('Statistik Cluster')
+
+    cluster_stats = filtered_df.groupby('Cluster').agg(
+        Usia_Tertua=('Age', 'max'),
+        Usia_Termuda=('Age', 'min'),
+        Usia_Rata_rata=('Age', 'mean'),
+        Jumlah_Perempuan=('Gender', 'sum'),
+        Jumlah_Laki_laki=('Gender', lambda x: x.eq(0).sum()),
+        Jumlah_Pendidikan_S1=('Education Level', lambda x: x.eq(0).sum()),
+        Jumlah_Pendidikan_S2=('Education Level', lambda x: x.eq(1).sum()),
+        Jumlah_Pendidikan_S3=('Education Level', lambda x: x.eq(2).sum()),
+        Tahun_Pengalaman_Tertinggi=('Years of Experience', 'max'),
+        Tahun_Pengalaman_Terendah=('Years of Experience', 'min'),
+        Tahun_Pengalaman_Rata_rata=('Years of Experience', 'mean'),
+        Gaji_Tertinggi=('Salary', 'max'),
+        Gaji_Terendah=('Salary', 'min'),
+        Gaji_Rata_rata=('Salary', 'mean')
+    )
+
+    st.write(cluster_stats.iloc[:, :3])
+    st.write(cluster_stats.iloc[:, 3:6])
+    st.write(cluster_stats.iloc[:, 6:9])
+    st.write(cluster_stats.iloc[:, 9:])
+
+    st.markdown("""
+    Dalam tabel tersebut, kita dapat melihat beberapa statistik penting terkait 
+    dengan cluster data. Misalnya, kita bisa melihat usia tertua dan termuda, rata-rata usia, 
+    tahun pengalaman, dan gaji rata-rata. Pada kasus ini, pada cluster 1 terlihat bahwa usia 
+    tertua adalah 40 tahun, sementara yang termuda adalah 23 tahun. Rata-rata usia pada 
+    cluster 1 sendiri adalah 30 tahun. Selain itu, terdapat informasi 
+    tentang jumlah perempuan dan laki-laki dalam setiap cluster, 
+    di mana dalam cluster tersebut terdapat 67 perempuan dan 68 laki-laki. 
+    Selain itu, terdapat beberapa statistik clustering lainnya yang dapat 
+    dilihat pada tabel statistik cluster tersebut
+    """)
+    st.markdown("""
+    ---------------------------------------
+    """)
 
 def main():
-    st.sidebar.title("Job Salary")
+    st.sidebar.title("Selamat Datang!")
 
-    section = st.sidebar.radio("Navigate", ("Introduction", "Data", "Gender Distribution", 
-    "Age Distribution", "Education Distribution","Age and Salary Relation", 
-    "Gender by Salary Comparison", "Education Levels", "Composition" ))
+    sections = ["Pengenalan", "Data", "Distribusi", "Hubungan", "Perbandingan", "Komposisi", "Clustering"]
+    selected_section = st.sidebar.radio("Pilih Halaman", sections)
 
-    if section == "Introduction":
+    st.title("Job Salary Dashboard")
+
+    if selected_section == "Pengenalan":
         display_introduction()
         st.write("You are viewing the Introduction section.")
-    elif section == "Data":
+    elif selected_section == "Data":
         display_data_section()
         st.write("You are viewing the Data section.")
-    elif section == "Gender Distribution":
+    elif selected_section == "Distribusi":
         display_gender_distribution()
-        st.write("You are viewing the Gender Distribution section.")
-    elif section == "Age Distribution":
         age_slider()
-        st.write("You are viewing the Age Distribution section.")
-    elif section == "Education Distribution":
         display_age_education_distribution(df)
-        st.write("You are viewing the Age Distribution section.")
-    elif section == "Age and Salary Relation":
+        st.write("You are viewing the Distribution section.")
+    elif selected_section == "Hubungan":
         display_age_x_salary()
-        st.write("You are viewing the Age and Salary Relation section.")
-    elif section =="Gender by Salary Comparison":
+        st.write("You are viewing the Relation section.")
+    elif selected_section == "Perbandingan":
         display_salary_by_gender(df)
-        st.write("You are viewing the Gender and Salary Comparison section.")
-    elif section == "Education Levels":
-        st.write(display_education_level(df))
-    elif section == "Composition":
+        st.write("You are viewing the Comparison section.")
+    elif selected_section == "Komposisi":
         display_composition(df)
         st.write("You are viewing the Composition section.")
+    elif selected_section == "Clustering":
+        display_kmeans(df)
+        st.write("You are viewing the Clustering section.")
 
 if __name__ == "__main__":
     main()
